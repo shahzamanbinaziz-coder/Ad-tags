@@ -75,7 +75,7 @@
     console.log("Rendering Turnstile...");
 
     window.turnstile.render("#cf-turnstile-box", {
-      sitekey: TURNSTILE_SITE_KEY,
+      sitekey: 0x4AAAAAACJ99NcrRLPVFxdI,
       callback: function () {
         captchaPassed = true;
         console.log("Turnstile passed, loading GPT ad...");
@@ -138,3 +138,4 @@
     init();
   }
 })();
+
