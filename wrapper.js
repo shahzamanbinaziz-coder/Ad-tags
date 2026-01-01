@@ -65,7 +65,7 @@
       document.body.appendChild(box);
 
       turnstile.render(box, {
-        sitekey: 0x4AAAAAACJ99NcrRLPVFxdI,
+        sitekey: TURNSTILE_SITE_KEY,
         theme: "light",
         callback: token => {
           if (!token) return;
