@@ -13,7 +13,7 @@
    * 2. CONFIG
    * --------------------------- */
   const CONFIG = {
-    turnstileSiteKey: "YOUR_TURNSTILE_SITE_KEY",
+    turnstileSiteKey: "0x4AAAAAACJ99NcrRLPVFxdI",
     gamNetwork: "23054716555",
     slots: [
       {
@@ -83,3 +83,4 @@
   verifyHuman(loadAds);
 
 })();
+
