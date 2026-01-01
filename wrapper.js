@@ -1,123 +1,97 @@
 (() => {
   "use strict";
 
-  /* =========================================================
-   * 1. HARD BOT BLOCK (same as PubGuru intent)
-   * ========================================================= */
-  if (/bot|crawler|spider|googlebot|lighthouse|facebookexternalhit/i.test(navigator.userAgent)) {
-    console.warn("[ADS] Bot detected – aborting ads");
-    return;
-  }
+  const TURNSTILE_SITE_KEY = "0x4AAAAAACJ99NcrRLPVFxdI";
 
-  /* =========================================================
-   * 2. CONFIG (CENTRALIZED)
-   * ========================================================= */
-  const CONFIG = {
-    turnstileSiteKey: "0x4AAAAAACJ99NcrRLPVFxdI",
-    gamScript: "https://securepubads.g.doubleclick.net/tag/js/gpt.js",
-    slots: [
-      {
-        adUnit: "/23054716555/ad-tags",
-        sizes: [[750, 300]],
-        divId: "div-gpt-ad-1"
-      }
-    ]
-  };
+  /* ------------------------------
+   * ORIGINAL GPT CODE (UNCHANGED)
+   * ------------------------------ */
+  const GAM_CODE = `
+    window.googletag = window.googletag || { cmd: [] };
 
-  /* =========================================================
-   * 3. SAFE SCRIPT LOADER
-   * ========================================================= */
+    googletag.cmd.push(function() {
+      googletag.defineSlot(
+        '/23054716555/ad-tags',
+        [750, 300],
+        'div-gpt-ad-1767247756816-0'
+      ).addService(googletag.pubads());
+
+      googletag.pubads().enableSingleRequest();
+      googletag.enableServices();
+    });
+
+    googletag.cmd.push(function() {
+      googletag.display('div-gpt-ad-1767247756816-0');
+    });
+  `;
+
+  /* ------------------------------
+   * HELPERS
+   * ------------------------------ */
   function loadJS(src, cb) {
     const s = document.createElement("script");
     s.async = true;
     s.src = src;
+    s.crossOrigin = "anonymous";
     s.onload = cb;
     document.head.appendChild(s);
   }
 
-  /* =========================================================
-   * 4. DOM READY GUARANTEE
-   * ========================================================= */
-  function onDomReady(cb) {
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-      cb();
-    } else {
-      document.addEventListener("DOMContentLoaded", cb);
-    }
+  function injectScript(code) {
+    const s = document.createElement("script");
+    s.type = "text/javascript";
+    s.text = code;
+    document.body.appendChild(s);
   }
 
-  /* =========================================================
-   * 5. TURNSTILE GATE (TRAFFICCOP EQUIVALENT)
-   * ========================================================= */
-  function verifyHuman(cb) {
+  /* ------------------------------
+   * VISIBLE TURNSTILE
+   * ------------------------------ */
+  function showCaptcha() {
     loadJS("https://challenges.cloudflare.com/turnstile/v0/api.js", () => {
-      const el = document.createElement("div");
-      el.style.display = "none";
-      document.body.appendChild(el);
+      const box = document.createElement("div");
+      box.id = "turnstile-box";
+      box.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 999999;
+        background: #ffffff;
+        padding: 16px;
+        border-radius: 8px;
+        box-shadow: 0 8px 25px rgba(0,0,0,.3);
+      `;
+      document.body.appendChild(box);
 
-      turnstile.render(el, {
-        sitekey: CONFIG.turnstileSiteKey,
+      turnstile.render(box, {
+        sitekey: 0x4AAAAAACJ99NcrRLPVFxdI,
+        theme: "light",
         callback: token => {
-          if (token) {
-            console.log("[ADS] Turnstile passed");
-            cb();
-          }
+          if (!token) return;
+
+          // Remove captcha UI
+          box.remove();
+
+          // Load GPT, then run GAM tag
+          loadJS(
+            "https://securepubads.g.doubleclick.net/tag/js/gpt.js",
+            () => injectScript(GAM_CODE)
+          );
         }
       });
     });
   }
 
-  /* =========================================================
-   * 6. LOAD GPT (NO REQUEST YET)
-   * ========================================================= */
-  function loadGPT(cb) {
-    window.googletag = window.googletag || { cmd: [] };
-    loadJS(CONFIG.gamScript, cb);
+  /* ------------------------------
+   * START
+   * ------------------------------ */
+  if (
+    document.readyState === "complete" ||
+    document.readyState === "interactive"
+  ) {
+    showCaptcha();
+  } else {
+    document.addEventListener("DOMContentLoaded", showCaptcha);
   }
-
-  /* =========================================================
-   * 7. DEFINE SLOTS + SEND REQUEST (CRITICAL PART)
-   * ========================================================= */
-  function requestAds() {
-    googletag.cmd.push(() => {
-      const slots = [];
-
-      CONFIG.slots.forEach(cfg => {
-        if (!document.getElementById(cfg.divId)) {
-          console.warn("[ADS] Missing div:", cfg.divId);
-          return;
-        }
-
-        const slot = googletag
-          .defineSlot(cfg.adUnit, cfg.sizes, cfg.divId)
-          .addService(googletag.pubads());
-
-        slots.push(slot);
-      });
-
-      if (!slots.length) return;
-
-      // IMPORTANT: match PubGuru default behavior
-      // ❌ Do NOT enableSingleRequest unless needed
-      // googletag.pubads().enableSingleRequest();
-
-      googletag.pubads().collapseEmptyDivs();
-      googletag.enableServices();
-
-      // 🔥 THIS IS WHAT SENDS THE GAM REQUEST
-      googletag.pubads().refresh(slots);
-
-      console.log("[ADS] GAM request sent");
-    });
-  }
-
-  /* =========================================================
-   * 8. MASTER FLOW (ORDER MATTERS)
-   * ========================================================= */
-  onDomReady(() => {
-    verifyHuman(() => {
-      loadGPT(requestAds);
-    });
-  });
-
 })();
