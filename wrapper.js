@@ -1,97 +1,31 @@
-(() => {
-  "use strict";
+// gpt-wrapper.js
+(function() {
+    // Load GPT library asynchronously
+    var gptScript = document.createElement('script');
+    gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
+    gptScript.async = true;
+    document.head.appendChild(gptScript);
 
-  const TURNSTILE_SITE_KEY = "0x4AAAAAACJ99NcrRLPVFxdI";
-
-  /* ------------------------------
-   * ORIGINAL GPT CODE (UNCHANGED)
-   * ------------------------------ */
-  const GAM_CODE = `
-    window.googletag = window.googletag || { cmd: [] };
-
+    // Wait for GPT to load
+    window.googletag = window.googletag || {cmd: []};
     googletag.cmd.push(function() {
-      googletag.defineSlot(
-        '/23054716555/ad-tags',
-        [750, 300],
-        'div-gpt-ad-1767247756816-0'
-      ).addService(googletag.pubads());
+        // Define your ad slot
+        var slot = googletag.defineSlot('/23330254529/gptwrapper', [728, 90], 'div-gpt-ad-1')
+            .addService(googletag.pubads());
 
-      googletag.pubads().enableSingleRequest();
-      googletag.enableServices();
+        // Enable single request mode (faster)
+        googletag.pubads().enableSingleRequest();
+
+        // Enable lazy loading (optional, improves performance)
+        googletag.pubads().enableLazyLoad({
+            fetchMarginPercent: 50,  // load ads 50% before they appear
+            renderMarginPercent: 25, // render when 25% visible
+            mobileScaling: 2.0       // mobile adjustment
+        });
+
+        googletag.enableServices();
+
+        // Display the ad
+        googletag.display('div-gpt-ad-1');
     });
-
-    googletag.cmd.push(function() {
-      googletag.display('div-gpt-ad-1767247756816-0');
-    });
-  `;
-
-  /* ------------------------------
-   * HELPERS
-   * ------------------------------ */
-  function loadJS(src, cb) {
-    const s = document.createElement("script");
-    s.async = true;
-    s.src = src;
-    s.crossOrigin = "anonymous";
-    s.onload = cb;
-    document.head.appendChild(s);
-  }
-
-  function injectScript(code) {
-    const s = document.createElement("script");
-    s.type = "text/javascript";
-    s.text = code;
-    document.body.appendChild(s);
-  }
-
-  /* ------------------------------
-   * VISIBLE TURNSTILE
-   * ------------------------------ */
-  function showCaptcha() {
-    loadJS("https://challenges.cloudflare.com/turnstile/v0/api.js", () => {
-      const box = document.createElement("div");
-      box.id = "turnstile-box";
-      box.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 999999;
-        background: #ffffff;
-        padding: 16px;
-        border-radius: 8px;
-        box-shadow: 0 8px 25px rgba(0,0,0,.3);
-      `;
-      document.body.appendChild(box);
-
-      turnstile.render(box, {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: "light",
-        callback: token => {
-          if (!token) return;
-
-          // Remove captcha UI
-          box.remove();
-
-          // Load GPT, then run GAM tag
-          loadJS(
-            "https://securepubads.g.doubleclick.net/tag/js/gpt.js",
-            () => injectScript(GAM_CODE)
-          );
-        }
-      });
-    });
-  }
-
-  /* ------------------------------
-   * START
-   * ------------------------------ */
-  if (
-    document.readyState === "complete" ||
-    document.readyState === "interactive"
-  ) {
-    showCaptcha();
-  } else {
-    document.addEventListener("DOMContentLoaded", showCaptcha);
-  }
 })();
